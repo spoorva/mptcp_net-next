@@ -1,2 +1,1 @@
-t/mptcp-sockopt-propagate-timestamp-request-to-subflows
 t/selftests-mptcp-enable-checksum-in-mptcp_join.sh
