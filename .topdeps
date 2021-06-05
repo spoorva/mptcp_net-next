@@ -1,2 +1,1 @@
-t/mptcp-setsockopt-handle-SOL_SOCKET-in-one-place-only
 t/selftests-mptcp-enable-checksum-in-mptcp_join.sh
