@@ -1,2 +1,1 @@
-t/sock-expose-so_timestamp-options-for-mptcp
 t/selftests-mptcp-enable-checksum-in-mptcp_join.sh
