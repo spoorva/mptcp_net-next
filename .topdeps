@@ -1,2 +1,1 @@
-t/mptcp-add-the-mib-for-data-checksum
 t/mptcp-add-csum_reqd-in-mptcp_out_options
