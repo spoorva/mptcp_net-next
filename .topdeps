@@ -1,1 +1,2 @@
 t/mptcp-receive-checksum-for-MP_CAPABLE-with-data
+t/mptcp-add-csum_reqd-in-mptcp_out_options
