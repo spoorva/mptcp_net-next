@@ -596,6 +596,46 @@ static int mptcp_setsockopt_sol_tcp_congestion(struct mptcp_sock *msk, sockptr_t
 	return ret;
 }
 
+static int mptcp_setsockopt_sol_ip_set_ip_tos(struct mptcp_sock *msk, sockptr_t optval,
+						unsigned int optlen)
+{
+	struct mptcp_subflow_context *subflow;
+	struct sock *sk = (struct sock *)msk;
+	int val = *((int *)optval);
+	int ret;
+
+	if (val < -1 || val > 0xff)
+		ret = -EINVAL;
+	lock_sock(sk);
+	mptcp_for_each_subflow(msk, subflow) {
+		struct sock *ssk = mptcp_subflow_tcp_sock(subflow);
+		lock_sock(ssk);
+		struct inet_sock *inet = inet_sk(ssk);
+		if (val == -1)
+			val = 0;
+		inet->tos = val;
+		ret = 0;
+		release_sock(ssk);
+	}
+
+	release_sock(sk);
+	return ret;
+
+}
+
+
+static int mptcp_setsockopt_sol_ip(struct mptcp_sock *msk, int optname,
+					sockptr_t optval, unsigned int optlen)
+{
+	switch (optname) {
+	case IP_TOS:
+		return mptcp_setsockopt_sol_ip_set_ip_tos(msk, optval, optlen);
+	}
+
+	return -EOPNOTSUPP;
+}
+
+
 static int mptcp_setsockopt_sol_tcp(struct mptcp_sock *msk, int optname,
 				    sockptr_t optval, unsigned int optlen)
 {
@@ -641,8 +681,12 @@ int mptcp_setsockopt(struct sock *sk, int level, int optname,
 	if (level == SOL_TCP)
 		return mptcp_setsockopt_sol_tcp(msk, optname, optval, optlen);
 
+	if (level == SOL_IP)
+		return mptcp_setsockopt_sol_ip(msk, optname, optval, optlen);
+
 	return -EOPNOTSUPP;
 }
+
 
 static int mptcp_getsockopt_first_sf_only(struct mptcp_sock *msk, int level, int optname,
 					  char __user *optval, int __user *optlen)
@@ -684,6 +728,18 @@ static int mptcp_getsockopt_sol_tcp(struct mptcp_sock *msk, int optname,
 	return -EOPNOTSUPP;
 }
 
+
+static int mptcp_getsockopt_sol_ip(struct mptcp_sock *msk, int optname,
+                                    char __user *optval, int __user *optlen)
+{
+        switch (optname) {
+	case IP_TOS:
+		return 0;
+        }
+        return -EOPNOTSUPP;
+}
+
+
 int mptcp_getsockopt(struct sock *sk, int level, int optname,
 		     char __user *optval, int __user *option)
 {
@@ -706,6 +762,8 @@ int mptcp_getsockopt(struct sock *sk, int level, int optname,
 
 	if (level == SOL_TCP)
 		return mptcp_getsockopt_sol_tcp(msk, optname, optval, option);
+	if (level == SOL_IP)
+		return mptcp_getsockopt_sol_ip(msk, optname, optval, option);
 	return -EOPNOTSUPP;
 }
 
