@@ -601,26 +601,23 @@ static int mptcp_setsockopt_sol_ip_set_ip_tos(struct mptcp_sock *msk, sockptr_t 
 {
 	struct mptcp_subflow_context *subflow;
 	struct sock *sk = (struct sock *)msk;
-	int val = *((int *)optval);
-	int ret;
-
-	if (val < -1 || val > 0xff)
-		ret = -EINVAL;
+	int ret, err;
+	
+	err = ip_getsockopt(sk, SOL_IP, optval, optlen);
+	if (err != 0)
+		return err;
 	lock_sock(sk);
 	mptcp_for_each_subflow(msk, subflow) {
 		struct sock *ssk = mptcp_subflow_tcp_sock(subflow);
-		lock_sock(ssk);
 		struct inet_sock *inet = inet_sk(ssk);
-		if (val == -1)
-			val = 0;
-		inet->tos = val;
+
+		lock_sock(ssk);
+		inet->tos = optval;
 		ret = 0;
 		release_sock(ssk);
 	}
-
 	release_sock(sk);
 	return ret;
-
 }
 
 
