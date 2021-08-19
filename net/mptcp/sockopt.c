@@ -596,14 +596,14 @@ static int mptcp_setsockopt_sol_tcp_congestion(struct mptcp_sock *msk, sockptr_t
 	return ret;
 }
 
-static int mptcp_setsockopt_sol_ip_set_ip_tos(struct mptcp_sock *msk, sockptr_t optval,
-						unsigned int optlen)
+static int mptcp_setsockopt_sol_ip_set_ip_tos(struct mptcp_sock *msk, int optname, 
+						sockptr_t optval, unsigned int optlen)
 {
 	struct mptcp_subflow_context *subflow;
 	struct sock *sk = (struct sock *)msk;
 	int ret, err;
 	
-	err = ip_getsockopt(sk, SOL_IP, optval, optlen);
+	err = ip_setsockopt(sk, SOL_IP, optname, optval, optlen);
 	if (err != 0)
 		return err;
 	lock_sock(sk);
@@ -626,7 +626,7 @@ static int mptcp_setsockopt_sol_ip(struct mptcp_sock *msk, int optname,
 {
 	switch (optname) {
 	case IP_TOS:
-		return mptcp_setsockopt_sol_ip_set_ip_tos(msk, optval, optlen);
+		return mptcp_setsockopt_sol_ip_set_ip_tos(msk, optname, optval, optlen);
 	}
 
 	return -EOPNOTSUPP;
