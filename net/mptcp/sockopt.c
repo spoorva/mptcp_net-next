@@ -602,8 +602,20 @@ static int mptcp_setsockopt_sol_ip_set_ip_tos(struct mptcp_sock *msk, int optnam
 	struct mptcp_subflow_context *subflow;
 	struct sock *sk = (struct sock *)msk;
 	int ret, err;
+	int val = 0;
 	
 	err = ip_setsockopt(sk, SOL_IP, optname, optval, optlen);
+	if (optlen >= sizeof(int)) {
+			if (copy_from_sockptr(&val, optval, sizeof(val)))
+				return -EFAULT;
+		} else if (optlen >= sizeof(char)) {
+			unsigned char ucval;
+
+			if (copy_from_sockptr(&ucval, optval, sizeof(ucval)))
+				return -EFAULT;
+			val = (int) ucval;
+		}
+
 	if (err != 0)
 		return err;
 	lock_sock(sk);
@@ -612,7 +624,7 @@ static int mptcp_setsockopt_sol_ip_set_ip_tos(struct mptcp_sock *msk, int optnam
 		struct inet_sock *inet = inet_sk(ssk);
 
 		lock_sock(ssk);
-		inet->tos = optval;
+		inet->tos = val;
 		ret = 0;
 		release_sock(ssk);
 	}
